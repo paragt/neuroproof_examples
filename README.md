@@ -49,22 +49,23 @@ The output directory will contain a label volume, as well as, a prediction file 
 other data not essential for agglomeration training.
 
 Once an over-segmentation and ground-truth labeling exists, 'neuroproof_graph_train'
-can be called to produce a prediction using a strategy similar to
-[Nunez-Iglesias et al '13] (http://arxiv.org/abs/1303.6163).  The following
-uses generates a classifier to be used if mitochondria labels are provided
-in channel 3 and one desires to classify edges using two passes:
+can be called to produce a prediction using a strategy similar to [Parag, et al '15](http://journals.plos.org/plosone/article?id=10.1371/journal.pone.0125825), 
+[Nunez-Iglesias et al '13] (http://arxiv.org/abs/1303.6163).  
 
-neuroproof_graph_learn |oversegmented_labels| |prediction| |groundtruth| --strategy_type 1
+The following uses generates a superpixel boundary classifier in a context-aware fashion as described in [Parag, et al '15](http://journals.plos.org/plosone/article?id=10.1371/journal.pone.0125825). It requires the mitochondria superpixels are labeled prior to the boundary training. The default number of training iteration is 1, i.e., it uses a 'flat' learning scheme with all the over-segmented regions provided in the input over-segmentation.
 
-If classification that does not consider mitochondria information is desired
-the following can be run:
+neuroproof_graph_learn |oversegmented_labels| |prediction| |groundtruth| 
 
-neuroproof_graph_learn |oversegmented_labels| |prediction| |groundtruth| --strategy_type 2 --num_iterations 5
+If classification that does not consider mitochondria information, run the following command. Notice that there are 5 training iterations. In the first iteration, the boundary classifier is trained using 'flat' learning. During the next four iterations, the training set is repeatedly augmented by the new features geenrated through agglomeration.
 
-The output of these procedures is an agglomeration classifier.  We provide example
+neuroproof_graph_learn |oversegmented_labels| |prediction| |groundtruth| --use_mito 0 --num_iterations 5
+
+The output of these procedures is a superpixel boundary classifier for agglomeration.  We provide example
 classifiers produced from the neuroproof using these two commands -- 'mito_aware.xml'
 and  'nomito_aware.h5' respectively.
 
+
+This package also provides an interface for interactive training as proposed in [Parag, et.al. 14] (http://www.researchgate.net/publication/265683774_Small_Sample_Learning_of_Superpixel_Classifiers_for_EM_Segmentation). Please contact us if you wish to utimize this feature.
 
 ## 3.  Agglomeration Procedure
 
@@ -80,6 +81,8 @@ size.  To run the following example with the validaation sample, one will need
 to run gala over its original grayscales.)
 
 neuroproof_graph_predict |oversegmented_labels| |prediction| |classifier| 
+
+Note that, by default this command will follow a two-stage context-aware strategy as described in [Parag, et al '15](http://journals.plos.org/plosone/article?id=10.1371/journal.pone.0125825) which assumes the 3rd channel in pixel prediction volume corresponds to mitochondria pixel detection. Use the option "--use_mito 0" to avoid this. 
 
 This will produce two files: a segmented label volume and graph.json which describes
 the certainty of an edge be a true edge in the graph.  This graph file can be
